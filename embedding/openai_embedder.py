@@ -1,8 +1,18 @@
 from langchain_openai import OpenAIEmbeddings
+
 from .base_embedder import BaseEmbedder
 
-class OpenAIEmbedded(BaseEmbedder):
-    def __init__(self, model: str = "text-embedding-3-large"):
-        self.embedder = OpenAIEmbeddings(model=model)
-    def embed(self, texts: list[str])-> list[list[float]]:
-        return self.embedder.embed_file(texts)
+class OpenAIEmbedder(BaseEmbedder):
+   
+
+    def __init__(self, model_name: str = "text-embedding-3-small"):
+        # Use the modern embedding model (you can change to text-embedding-3-large)
+        self.embedder = OpenAIEmbeddings(model=model_name)
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        """Generate embeddings for multiple text chunks."""
+        return self.embedder.embed_documents(texts)
+
+    def embed_query(self, text: str) -> list[float]:
+        """Generate embedding for a single query string."""
+        return self.embedder.embed_query(text)
