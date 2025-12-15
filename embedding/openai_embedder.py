@@ -6,7 +6,7 @@ class OpenAIEmbedder(BaseEmbedder):
    
 
     def __init__(self, model_name: str = "text-embedding-3-small"):
-        # Use the modern embedding model (you can change to text-embedding-3-large)
+       
         self.embedder = OpenAIEmbeddings(model=model_name)
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:

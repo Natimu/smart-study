@@ -1,7 +1,7 @@
 from ingestion.pdf_parser import PDFParser
-from embedding.openai_embedder import OpenAIEmbedder
+from embedding.local_embedder import LocalEmbedder
 from retrieval.vector_retriever import VectorRetriever
-from llm_chains.explanation_chain import ExplanationChain
+from llm_chains.local_explanation import LocalExplanation
 from langchain_community.vectorstores import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
@@ -14,7 +14,7 @@ splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
 chunks = splitter.split_text(text)
 
 # 3. Create embeddings using your wrapper class
-embedder = OpenAIEmbedder()
+embedder = LocalEmbedder()
 
 vectorstore = Chroma.from_texts(
     chunks,
@@ -25,9 +25,9 @@ vectorstore = Chroma.from_texts(
 
 # 4. Setup retriever and explanation chain
 retriever = VectorRetriever(vectorstore)
-explainer = ExplanationChain(retriever)
+explainer = LocalExplanation(retriever)
 
 # 5. Ask a question
-query = "Explain the TCP/IP model"
+query = "What is section 4.3"
 answer = explainer.run(query)
 print(answer)
