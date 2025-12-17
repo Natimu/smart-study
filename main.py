@@ -1,33 +1,35 @@
-from ingestion.pdf_parser import PDFParser
+from subjects.subject_manager import SubjectManager
 from embedding.local_embedder import LocalEmbedder
-from retrieval.vector_retriever import VectorRetriever
 from llm_chains.local_explanation import LocalExplanation
-from langchain_community.vectorstores import Chroma
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from llm_chains.quiz_chain import QuizChain
+from llm_chains.summary_chain import SummaryChain
 
-# 1. Parse PDF
-parser = PDFParser()
-text = parser.parse("Natnael.pdf")
-
-# 2. Split text into chunks
-splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
-chunks = splitter.split_text(text)
-
-# 3. Create embeddings using your wrapper class
 embedder = LocalEmbedder()
+manager = SubjectManager(embedder)
 
-vectorstore = Chroma.from_texts(
-    chunks,
-    embedding=embedder,             
-    persist_directory="./db"
-)
+# Create subject once
 
 
-# 4. Setup retriever and explanation chain
-retriever = VectorRetriever(vectorstore)
-explainer = LocalExplanation(retriever)
+# Upload files
+manager.ingest_files("networks", [
+    "Chapter_05.pdf",
+    "Chapter_06.pdf",
+    "Chapter_07.pdf"
+])
+retriever = manager.get_retriever("networks")
 
-# 5. Ask a question
-query = "What is section 4.3"
-answer = explainer.run(query)
-print(answer)
+# # Query
+
+# explainer = LocalExplanation(retriever)
+
+# answer = explainer.run("what is Error detection and correction in link layer")
+# print(answer)
+
+quiz = QuizChain(retriever)
+summary = SummaryChain(retriever)
+
+print("\n=== QUIZ ===\n")
+print(quiz.run("Wireless and Mobile Networks", number_questions=6, quiz_type="mcq", difficulty="exam", top_k=6))
+
+print("\n=== CHEAT SHEET ===\n")
+print(summary.run("Mobile IP", top_k=8))

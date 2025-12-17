@@ -1,0 +1,14 @@
+{
+  "subject": {},
+  "subjects": {
+    "networks": {
+      "name": "Computer Networks",
+      "path": "./db/networks",
+      "files": [
+        "Chapter_05.pdf",
+        "Chapter_06.pdf",
+        "Chapter_07.pdf"
+      ]
+    }
+  }
+}

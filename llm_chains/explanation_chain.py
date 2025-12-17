@@ -10,7 +10,7 @@ class ExplanationChain(BaseChain):
         context_chunks = self.retriever.retrieve(query)
         context_text = "\n\n".join(context_chunks)
         prompt = f"""
-        You are a helpful assistant. Use the following context to answer the question.
+        You are a helpful study assistant. Use the following context to answer the question.
         Context:
         {context_text}
 
