@@ -6,59 +6,82 @@ QuizType = Literal["mcq", "short_answer", "true_false"]
 
 class QuizChain(BaseChain):
 
-    def __init__(self, retriever, model: str = "mistral", temperature: float = 0.2):
+    def __init__(self, retriever, model: str = "mistral", temperature: float = 0.1):
         self.retriever = retriever
         self.llm = ChatOllama(model=model, temperature=temperature)
-    
+
+    def _format_instructions(self, quiz_type: str) -> str:
+        if quiz_type == "mcq":
+            return """
+                Output STRICTLY in the following format.
+                Do NOT include any other question types.
+
+                Each question MUST be multiple-choice.
+
+                Format:
+                1) Question text
+                A) Option A
+                B) Option B
+                C) Option C
+                D) Option D
+                Correct Answer: <A/B/C/D>
+                Explanation: 1–2 sentences referencing the context
+                """
+        elif quiz_type == "short_answer":
+            return """
+                Output STRICTLY in the following format.
+
+                Format:
+                1) Question text
+                Expected Points:
+                - bullet point
+                - bullet point
+                Sample Answer: concise paragraph
+                """
+        elif quiz_type == "true_false":
+            return """
+                Output STRICTLY in the following format.
+
+                Format:
+                1) Statement
+                Answer: True/False
+                Justification: 1–2 sentences
+                """
+        else:
+            raise ValueError(f"Unsupported quiz type: {quiz_type}")
+
 
     def run(
             self,
             topic: str,
-            number_questions: int = 5,
+            num_questions: int = 5,
             quiz_type: QuizType = "true_false",
             difficulty: str = "intermediate",
             top_k: int = 5,
     ) -> str:
-        context_chuck = self.retriever.retrieve(topic, top_k=top_k)
-        context = "\n\n".join(context_chuck)
+        context_chucks = self.retriever.retrieve(topic, top_k=top_k)
+        context = "\n\n".join(context_chucks)
+
+        format_rules = self._format_instructions(quiz_type)
 
         prompt = f"""
             You are a teaching assistant helping a student study.
-            Generate a quiz using ONLY the context provided.
 
             Rules:
-            - If the context does not contain enough information, say what is missing briefly.
-            - Do NOT invent facts not present in the context.
+            - Use ONLY the context provided.
+            - Do NOT invent facts.
             - Difficulty: {difficulty}
-            - Quiz type: {quiz_type}
-            - Number of questions: {number_questions}
+            - Generate EXACTLY {num_questions} questions.
+            - Follow the format EXACTLY.
+            - Do NOT mix formats.
 
-            For mcq:
-            - Provide 4 options (A-D)
-            - Mark the correct answer
-            - Provide a 1-2 sentence explanation referencing the context
-
-            For short_answer:
-            - Provide expected key points for grading
-            - provide a sample answer
-
-            For true_false:
-            - Mark True/False and provide a short justification
+            {format_rules}
 
             Context:
             {context}
 
             Topic:
             {topic}
-
-            Output format:
-            1) Question...
-            A) ...
-            B) ...
-            C) ...
-            D) ...
-            Answer: X
-            Explanation: ...
 
             Quiz:
             """
