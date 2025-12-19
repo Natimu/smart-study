@@ -1,6 +1,5 @@
 from subjects.subject_manager import SubjectManager
 from embedding.local_embedder import LocalEmbedder
-from llm_chains.local_explanation import LocalExplanation
 from llm_chains.quiz_chain import QuizChain
 from llm_chains.summary_chain import SummaryChain
 
@@ -29,7 +28,7 @@ quiz = QuizChain(retriever)
 summary = SummaryChain(retriever)
 
 print("\n=== QUIZ ===\n")
-print(quiz.run("Wireless and Mobile Networks", number_questions=6, quiz_type="mcq", difficulty="exam", top_k=6))
+print(quiz.run("control plane", num_questions=10, quiz_type="mcq", difficulty="exam", top_k=6))
 
-print("\n=== CHEAT SHEET ===\n")
-print(summary.run("Mobile IP", top_k=8))
+# print("\n=== CHEAT SHEET ===\n")
+# print(summary.run("Intra-AS Routing in the Internet", top_k=8))

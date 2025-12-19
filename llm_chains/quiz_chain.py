@@ -13,39 +13,76 @@ class QuizChain(BaseChain):
     def _format_instructions(self, quiz_type: str) -> str:
         if quiz_type == "mcq":
             return """
-                Output STRICTLY in the following format.
-                Do NOT include any other question types.
+                {
+                    "id": 1,
+                    "type": "mcq",
+                    "question": "...",
+                    "options": {
+                        "A": "...",
+                        "B": "...",
+                        "C": "...",
+                        "D": "..."
+                    },
+                    "grading": {
+                        "correct_option": "B"
+                    },
+                    "explanation": "...",
+                    "source_chunks": [{
+                        "chunk_id": "string",
+                        "document": "string",
+                        "page": 1
+                    }]
+                }
 
-                Each question MUST be multiple-choice.
-
-                Format:
-                1) Question text
-                A) Option A
-                B) Option B
-                C) Option C
-                D) Option D
-                Correct Answer: <A/B/C/D>
-                Explanation: 1–2 sentences referencing the context
+                
                 """
         elif quiz_type == "short_answer":
             return """
-                Output STRICTLY in the following format.
+                {
+                    "id": 3,
+                    "type": "short_answer",
+                    "question": "...",
+                    "grading": {
+                        "expected_points": [
+                        "...",
+                        "...",
+                        "..."
+                        ],
+                        "keywords": [
+                        "...",
+                        "...",
+                        "...",
+                        "..."
+                        ],
+                        "max_score": 3
+                    },
+                    "sample_answer": "....",
+                    "explanation": "...",
+                    "source_chunks": [{
+                        "chunk_id": "string",
+                        "document": "string",
+                        "page": 1
+                    }]
+                    }
 
-                Format:
-                1) Question text
-                Expected Points:
-                - bullet point
-                - bullet point
-                Sample Answer: concise paragraph
                 """
         elif quiz_type == "true_false":
-            return """
-                Output STRICTLY in the following format.
+          return """
+                {
+                    "id": 2,
+                    "type": "true_false",
+                    "question": "...",
+                    "grading": {
+                        "correct_answer": false
+                    },
+                    "explanation": "...",
+                    "source_chunks": [{
+                        "chunk_id": "string",
+                        "document": "string",
+                        "page": 1
+                    }]
+                }
 
-                Format:
-                1) Statement
-                Answer: True/False
-                Justification: 1–2 sentences
                 """
         else:
             raise ValueError(f"Unsupported quiz type: {quiz_type}")
@@ -71,11 +108,25 @@ class QuizChain(BaseChain):
             - Use ONLY the context provided.
             - Do NOT invent facts.
             - Difficulty: {difficulty}
-            - Generate EXACTLY {num_questions} questions.
+            - The length of the "questions" array MUST be exactly {num_questions}.
             - Follow the format EXACTLY.
             - Do NOT mix formats.
+            - quiz_id MUST be a unique string identifier (UUID or timestamp-based string).
+            - Return STRICTLY valid JSON that matches the following schema.
+            - Question "id" values must be sequential integers starting from 1
+            - For true_false questions, grading.correct_answer MUST be a boolean (true or false), not a string.
+            - Each object inside the "questions" array MUST follow the schema below.
 
-            {format_rules}
+                Do not include markdown, comments, or extra text.
+
+                {{
+                "quiz_id": "...",
+                "difficulty": "{difficulty}",
+                "quiz_type": "{quiz_type}",
+                "questions": [
+                    {format_rules}    
+                ]
+                }}
 
             Context:
             {context}
