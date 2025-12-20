@@ -60,31 +60,42 @@ class SubjectManager:
         
         subject = self.metadata["subjects"][subject_id]
         splitter = RecursiveCharacterTextSplitter(
-            chunk_size = 800,
-            chunk_overlap = 100
+            chunk_size = 300,
+            chunk_overlap = 50
         )
 
         all_chunks = []
+        metadata = []
+        
         for file_path in file_paths:
             file_name = os.path.basename(file_path)
-
-            # if file is already in the chunk skip
+            
             if file_name in subject["files"]:
                 continue
-
+            
             parser = PDFParser()
             text = parser.parse(file_path)
             chunks = splitter.split_text(text)
-            all_chunks.extend(chunks)
-
+            
+            # Add metadata for each chunk
+            for i, chunk in enumerate(chunks):
+                all_chunks.append(chunk)
+                metadata.append({
+                    "source": file_name,
+                    "chunk_id": f"{file_name}_{i}",
+                    "document": file_name
+                })
+            
             subject["files"].append(file_name)
+        
         if not all_chunks:
             return
         
         Chroma.from_texts(
-            all_chunks, 
-            embedding = self.embedder, 
-            persist_directory=subject["path"]
+            all_chunks,
+            embedding=self.embedder,
+            persist_directory=subject["path"],
+            metadata=metadata 
         )
 
         self._save_metadata()

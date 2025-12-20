@@ -39,7 +39,7 @@ class QuizChain(BaseChain):
                     "grading": {
                         "correct_option": "B"
                     },
-                    "explanation": "Option B is correct because it accurately describes the purpose of X as stated in the context."
+                    "explanation": "This is the explanation."
                 }
                 """
         elif quiz_type == "short_answer":
@@ -62,7 +62,7 @@ class QuizChain(BaseChain):
                         "max_score": 3
                     },
                     "sample_answer": "A sample answer demonstrating the expected response.",
-                    "explanation": "A complete answer should mention these key aspects and demonstrate understanding of the concept."
+                    "explanation": "This is the explanation."
                 }
                 """
         elif quiz_type == "true_false":
@@ -74,7 +74,7 @@ class QuizChain(BaseChain):
                     "grading": {
                         "correct_answer": true
                     },
-                    "explanation": "This statement is true because X performs the function of Y according to the material."
+                    "explanation": "This is the explanation."
                 }
                 """
         else:
@@ -100,8 +100,12 @@ class QuizChain(BaseChain):
             difficulty: str = "intermediate",
             top_k: int = 3,
     ) -> dict:
-        context_chucks = self.retriever.retrieve(topic, top_k=top_k)
-        context = "\n\n".join(context_chucks)
+        context_chunks = self.retriever.retrieve(topic, top_k=top_k)
+        
+        if not context_chunks:
+            raise ValueError(f"No context found for topic: {topic}")
+        
+        context = "\n\n".join(context_chunks)
         
         extra_rules = ""
         if quiz_type == "mcq":
@@ -117,7 +121,6 @@ class QuizChain(BaseChain):
     - This quiz is TRUE/FALSE ONLY.
     - Questions must be statements that can be definitively true or false.
     - Avoid ambiguous statements.
-    - Explanation must give a valuable reason on why it is true ot false 
                 """
         elif quiz_type == "short_answer":
             extra_rules = """
@@ -140,12 +143,6 @@ STRICT RULES:
 - Each explanation must be one clear sentence
 {extra_rules}
 
-EXPLANATION REQUIREMENTS:
-- For TRUE statements: Explain why it's true with reference to the context
-- For FALSE statements: Explain why it's false and what the correct information is
-- For MCQ: Explain why the correct option is right and why others are wrong
-- Keep explanations concise but informative (1-2 sentences)
-
 OUTPUT FORMAT:
 - Return ONLY valid JSON
 - NO markdown code blocks (no ```json or ```)
@@ -161,6 +158,7 @@ CONTEXT:
 TOPIC: {topic}
 
 Generate the quiz now:"""
+
         MAX_RETRIES = 3
         raw = None
 
@@ -245,7 +243,6 @@ Generate the quiz now:"""
         
         return cleaned
 
-        
     # Validation methods
     def _validate_root_keys(self, data):
         if not isinstance(data, dict):
